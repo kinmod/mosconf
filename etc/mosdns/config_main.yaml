@@ -1,0 +1,228 @@
+## 日志设置(日志级别可选 "debug" "info" "warn" "error")
+log:
+  level: error
+  file: "/var/log/mosdns.log"
+
+## API 入口设置
+api:
+  http: "[本机局域网IP]:9091"
+
+## 预加载的插件
+include:
+  - "/etc/mosdns/plugin/01_dns_server.yaml"
+  - "/etc/mosdns/plugin/02_data_set.yaml"
+  - "/etc/mosdns/plugin/03_cache_plugin.yaml"
+  #- "/etc/mosdns/plugin/04_local_service.yaml"
+
+## 插件设置
+plugins:
+
+  # 如果有应答则停止运行
+  - tag: Exit_if_Resp
+    type: sequence
+    args:
+      - matches: 
+          - has_resp
+        exec: accept
+
+
+  # 如果有应答,则先将TTL修改为1小时然后停止运行
+  - tag: TTL_and_Exit
+    type: sequence
+    args:
+      - exec: ttl 3600
+      - exec: accept
+
+  - tag: TTL_Exit_if_Resp
+    type: sequence
+    args:
+      - matches: 
+          - has_resp
+        exec: jump TTL_and_Exit
+
+
+  #-------- 屏蔽HTTPS(type65)和ANY(type255)查询 --------#
+
+  - tag: Block_Bad_Query
+    type: sequence
+    args:
+      - matches: 
+          - qtype 65 255
+        exec: reject 5
+
+
+  #---------------- DDNS域名查询 ----------------#
+
+  # 先读取缓存(不存盘), 如果无应答再转发至国内公共DNS(不修改TTL)
+  - tag: Lookup_DDNS_seq
+    type: sequence
+    args:
+      - exec: cache 1024
+      - exec: forward 223.5.5.5 119.29.29.29
+      - exec: jump Exit_if_Resp
+  
+  # 查询域名位于DDNS域名列表, 则执行上面的sequence
+  - tag: Lookup_DDNS
+    type: sequence
+    args:
+      - matches:
+          - qname "[DDNS域名]"
+        exec: jump Lookup_DDNS_seq
+
+
+  #---------------- DNS查询行为设置 ----------------#
+
+  # 局域网的DNS查询: 先读取缓存, 如果无应答再转发至本地DNS
+  - tag: Lookup_Local_seq
+    type: sequence
+    args:
+      - exec: $PTR_Cache_Local
+      - exec: $Cache_Local
+      - exec: $Local_Server
+      - exec: jump TTL_Exit_if_Resp
+
+  # 直连的DNS查询: 先读取缓存, 如果无应答再转发至国内DNS
+  - tag: Lookup_Direct_seq
+    type: sequence
+    args:
+      - exec: $PTR_Cache_Direct
+      - exec: $Cache_Direct
+      #- exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
+      #- exec: ecs [本机公网IP]  # 发送ECS IP从而获得最优的查询结果
+      - exec: $Domestic_Server
+      - exec: jump TTL_Exit_if_Resp
+  
+  # 代理的DNS查询: 先读取缓存, 如果无应答再转发至国外DNS
+  - tag: Lookup_Proxy_seq
+    type: sequence
+    args:
+      - exec: $PTR_Cache_Proxy
+      - exec: $Cache_Proxy
+      #- exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
+      #- exec: ecs [节点落地IP]  # 发送ECS IP从而获得最优的查询结果
+      - exec: $Overseas_Server
+      - exec: jump TTL_Exit_if_Resp
+
+
+  #----------------# 本地DNS查询 #----------------#
+  - tag: Lookup_Local
+    type: sequence
+    args:
+      - matches:
+          - qname $Domain_Private  # DNS查询的域名是局域网域名，则使用本地DNS进行查询
+        exec: jump Lookup_Local_seq
+      - matches:
+          - ptr_ip $IP_Private  # PTR查询的IP是局域网IP，则使用本地DNS进行查询
+        exec: jump Lookup_Local_seq
+
+  #---------------- 非DDNS域名分流查询 ----------------#
+  - tag: Lookup_Domain
+    type: sequence
+    args:
+      - matches:
+          - qname $Domain_Proxy_Ahead  # DNS查询的域名是需要提前代理的域名(比如谷歌)，则使用国外DNS进行查询
+        exec: jump Lookup_Proxy_seq
+      - matches:
+          - qname $Domain_Direct  # DNS查询的域名是需要直连的域名，则使用国内DNS进行查询
+        exec: jump Lookup_Direct_seq
+      - matches:
+          - qname $Domain_Overseas  # DNS查询的域名是国外的域名，则使用国外DNS进行查询
+        exec: jump Lookup_Proxy_seq
+
+  #---------------- PTR 分流查询 ----------------#
+  - tag: Lookup_PTR
+    type: sequence
+    args:
+      - matches:
+          - ptr_ip $IP_CN  # PTR查询的IP是国内IP，则使用国内DNS进行查询
+        exec: jump Lookup_Direct_seq
+      - matches:
+          - qtype 12  # PTR查询的IP既不是国内IP、也不是局域网IP，则使用国外DNS进行查询
+        exec: jump Lookup_Proxy_seq
+
+
+  #---------------- DNS回落查询设置 ----------------#
+
+  # 不在域名列表中的查询先通过国内DNS解析, 如果得到的不是国内IP则丢弃应答
+  - tag: Fallback_Primary
+    type: sequence
+    args:
+      - exec: $PTR_Cache_Direct
+      - exec: $Cache_Direct
+      #- exec: prefer_ipv4
+      #- exec: ecs [本机公网IP]
+      - exec: $Domestic_Server
+      - matches:
+          - "!resp_ip $IP_CN"
+        exec: drop_resp
+
+  # fallback插件设置: 如果DNS应答不是国内IP, 则转发给国外DNS
+  - tag: Fallback_Secondary
+    type: sequence
+    args:
+      - exec: $PTR_Cache_Proxy
+      - exec: $Cache_Proxy
+      #- exec: prefer_ipv4
+      #- exec: ecs [节点落地IP]
+      - exec: $Overseas_Server
+
+  - tag: Fallback
+    type: fallback
+    args:
+      primary: Fallback_Primary
+      secondary: Fallback_Secondary
+      threshold: 500
+      always_standby: true
+
+
+  #----------------# 对客户端分流 #----------------#
+  # DNS防泄漏分流
+  - tag: DNS_Split
+    type: sequence
+    args:
+      - exec: jump Lookup_Domain
+      - exec: jump Lookup_PTR
+      - exec: $Fallback
+      - exec: jump TTL_Exit_if_Resp
+
+  # 请提前将需要进行DNS分流的客户端IP填入 proxy_clients.txt
+  - tag: Proxy_Clients
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/proxy_clients.txt"
+
+  # 只有IP在 proxy_clients.txt 中的客户端才能进行DNS分流；否则只能使用国内DNS
+  - tag: Client_Split
+    type: sequence
+    args:
+      - matches:
+          - client_ip $Proxy_Clients
+        exec: jump DNS_Split
+      - exec: jump Lookup_Direct_seq
+
+
+  ##----------------## 【主程序】 ##----------------##
+
+  - tag: MAIN
+    type: sequence
+    args:
+      # 屏蔽HTTPS和ANY查询
+      - exec: jump Block_Bad_Query
+      # 处理本地网络发现等特殊DNS查询
+      #- exec: jump Local_Service
+      # 解析DDNS域名
+      - exec: jump Lookup_DDNS
+      # 处理本地DNS查询
+      - exec: jump Lookup_Local
+      # 对列表中的客户端进行DNS分流
+      - exec: jump Client_Split
+
+
+  ##----------------## 监听端口设置 ##----------------##
+
+  - tag: UDP_SERVER
+    type: udp_server
+    args:
+      entry: MAIN
+      listen: 127.0.0.1:10053
