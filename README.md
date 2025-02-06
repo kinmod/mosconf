@@ -242,6 +242,20 @@ mosdns 可以设置多个缓存池，本项目将局域网本地(DHCP server)/�
 
 <br/>
 
+### mosdns 上游服务器的选择
+建议使用支持 ECS 的公共 DNS 服务器，获取离自己最近的 IP，从而有更好的连接速度。
+<br/>
+建议通过 DOH (DNS over HTTPS) 进行查询，确保 ECS 中的 IP 信息不被中间人看到。
+<br/>
+国内既支持 DOH 又支持 ECS 的公共 DNS 服务器有：阿里、腾讯、360 。
+<br/>
+国外支持 DOH 的公共 DNS 服务器有很多，但是支持 ECS 的也不多，大名鼎鼎的 Cloudflare 就不支持 ECS 。
+<br/>
+目前已知 谷歌、AdGuard 都支持 ECS；Quad9 的 9.9.9.9 不支持，但是 9.9.9.11 支持。其他的请自行搜索。
+建议大家选择公共 DNS 服务器时 打开其官网看一下相关介绍。
+
+<br/>
+
 ## 参考项目
 · [mosdns](https://github.com/IrineSistiana/mosdns)<br/>
 · [Xray-core](https://github.com/XTLS/Xray-core)<br/>
