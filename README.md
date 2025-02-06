@@ -228,6 +228,7 @@ routingObject 中的 `"domainStrategy": "IPIfNonMatch"`
 }
 ```
 
+<br/>
 
 ### mosdns 缓存分离的优势
 mosdns 可以设置多个缓存池，本项目将局域网本地(DHCP server)/国内服务器/国外服务器的查询缓存分开，这样做的好处：
