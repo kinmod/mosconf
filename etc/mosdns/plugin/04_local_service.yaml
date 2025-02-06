@@ -1,0 +1,43 @@
+#################### 局域网发现服务等特殊DNS查询 ####################
+# (本插件用于处理苹果设备的局域网发现服务，避免该类查询长时间等待而增加服务器负载，不使用本插件也不影响最终的DNS查询结果)
+plugins:
+
+  # 处理局域网SRV查询
+  - tag: Local_SRV
+    type: sequence
+    args:
+      - matches:
+          - qtype 33
+          - qname _dns-push-tls._tcp.service.arpa _dns-push-tls._tcp
+        exec: reject 4
+
+  # 处理 Matter协议 服务发现 (如果家中有Matter家居中枢，需删除此段以保证Matter服务正常运行)
+  - tag: Local_Matter
+    type: sequence
+    args:
+      - matches:
+          - qtype 6 12
+          - qname _matter._tcp.default.service.arpa
+        exec: reject 4
+  
+  # 处理局域网服务发现的SOA查询
+  - tag: Local_SOA
+    type: sequence
+    args:
+      - matches:
+          - qtype 6
+          - qname full:service.arpa full:default.service.arpa full:_tcp.default.service.arpa
+        exec: reject 0
+      - matches:
+          - qtype 6
+          - qname full:local
+        exec: reject 3
+
+
+  #--------# 组合插件 #--------#
+  - tag: Local_Service
+    type: sequence
+    args:
+      - exec: jump Local_SRV
+      #- exec: jump Local_Matter
+      - exec: jump Local_SOA

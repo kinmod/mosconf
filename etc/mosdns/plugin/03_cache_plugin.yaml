@@ -1,0 +1,56 @@
+#################### 缓存插件 ####################
+plugins:
+
+  #-------- PTR缓存插件 --------#
+  # 局域网PTR缓存
+  - tag: PTR_Cache_Local
+    type: reverse_lookup
+    args:
+      size: 8192
+      ttl: 3600
+      handle_ptr: true
+
+  # 经过直连的PTR缓存
+  - tag: PTR_Cache_Direct
+    type: reverse_lookup
+    args:
+      size: 65536
+      ttl: 3600
+      handle_ptr: true
+
+  # 经过代理的PTR缓存
+  - tag: PTR_Cache_Proxy
+    type: reverse_lookup
+    args:
+      size: 65536
+      ttl: 3600
+      handle_ptr: true
+
+
+  #-------- DNS缓存插件 --------# (请确保 "/etc/mosdns/cache" 目录存在, 或替换成自定义目录)
+  # 局域网 DNS 缓存
+  - tag: Cache_Local
+    type: cache
+    args:
+      size: 8192
+      lazy_cache_ttl: 86400
+      dump_file: /etc/mosdns/cache/cache_dns_local.dump
+      dump_interval: 600
+  
+  # 经过直连的 DNS 缓存
+  - tag: Cache_Direct
+    type: cache
+    args:
+      size: 65536
+      lazy_cache_ttl: 86400
+      dump_file: /etc/mosdns/cache/cache_dns_direct.dump
+      dump_interval: 600
+  
+  # 经过代理的 DNS 缓存
+  - tag: Cache_Proxy
+    type: cache
+    args:
+      size: 65536
+      lazy_cache_ttl: 86400
+      dump_file: /etc/mosdns/cache/cache_dns_proxy.dump
+      dump_interval: 600

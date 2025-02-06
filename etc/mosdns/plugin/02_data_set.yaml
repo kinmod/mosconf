@@ -1,0 +1,52 @@
+#################### IP和域名数据 ####################
+plugins:
+
+  # 局域网IP & 保留地址
+  - tag: IP_Private
+    type: ip_set
+    args:
+      ips:
+        - "233.252.0.0/24"
+        - "255.255.255.255"
+        - "2001:db8::/32"
+      files:
+        - "/etc/mosdns/ip_set/geoip_private.txt"
+
+  # 中国大陆IP
+  - tag: IP_CN
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/ip_set/geoip_cn.txt"
+
+  # 局域网域名
+  - tag: Domain_Private
+    type: domain_set
+    args:
+      exps:
+        - "0.0.192.in-addr.arpa"
+      files:
+        - "/etc/mosdns/domain_set/geosite_private.txt"
+  
+  # 提前代理的域名
+  - tag: Domain_Proxy_Ahead
+    type: domain_set
+    args:
+      exps:
+        - "domain:deepseek.com"
+      files:
+        - "/etc/mosdns/domain_set/geosite_google.txt"
+  
+  # 直连&国内的域名
+  - tag: Domain_Direct
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/domain_set/geosite_cn.txt"
+  
+  # 国外的域名
+  - tag: Domain_Overseas
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/domain_set/geosite_geolocation-!cn.txt"
