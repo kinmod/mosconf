@@ -227,6 +227,7 @@ routingObject 中的 `"domainStrategy": "IPIfNonMatch"`
   ]
 }
 ```
+注意：Xray 内置的 DNS 只支持 A/AAAA 查询，其他类型的 DNS 查询会直接丢弃。
 
 <br/>
 
@@ -235,7 +236,9 @@ mosdns 可以设置多个缓存池，本项目将局域网本地(DHCP server)/�
 1.	直连的客户端即便查询国外网站的 DNS，也只会被存储在国内服务器的缓存池中，不会污染国外服务器的缓存池，从而保证走代理的客户端始终能获得正确的 DNS 解析；
 2.	代理节点变更后，可以只清除国外服务器的缓存池，不影响直连的域名或客户端；以上文“最佳实践”中的场景为例，清除国外服务器的缓存可以使用命令行：
 `curl http://192.168.10.3:9091/plugins/Cache_Proxy/flush` 或用浏览器直接访问 `http://192.168.10.3:9091/plugins/Cache_Proxy/flush` (该操作只会清除内存中的缓存，不会删除存盘 dump 文件；只要不重启 mosdns 或不重启设备，mosdns 不会主动加载存盘 dump 文件；如果距离上次 dump 有 1024 次更新，则内存缓存会存盘并覆盖旧的记录)；
-3.	如果经常变更代理节点，只需删除 config_main.yaml 第 99、100、163、164 行，即禁用国外服务器的查询缓存（AdGuardhome 有缓存功能，但是无法进行缓存分离。如果 AdGuardHome 和 mosdns 搭配使用，建议禁用 AdGuardHome 的乐观缓存，只启用 mosdns 的缓存，避免缓存池污染）。
+3.	如果经常变更代理节点，只需删除 config_main.yaml 第 99、100、163、164 行，即禁用国外服务器的查询缓存。
+
+注意：AdGuardhome 有缓存功能，但是无法进行缓存分离。如果 AdGuardHome 和 mosdns 搭配使用，建议禁用 AdGuardHome 的乐观缓存，只启用 mosdns 的缓存，避免缓存池污染。
 
 <br/>
 
