@@ -1,7 +1,7 @@
 #################### 上游DNS服务器 ####################
 plugins:
 
-  # 本地DNS (主路由)
+  # 本地DNS (DHCP server)
   - tag: Local_Server
     type: forward
     args:
