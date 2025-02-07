@@ -1,8 +1,9 @@
 # **mosdns-homeconf**
 适用于家庭网络 DNS 管理的 mosdns 配置，实现局域网客户端按需分流、不同网关的设备共用一个 DNS 转发器、不同上游服务器的缓存分离、快速处理 PTR 查询、防止 DNS 污染等功能
 
+（特别适合 All in One 玩家 或 使用旁路网关的用户）
 <br/>
-
+<br/>
 ## 特性：
 1.	网关不同的客户端使用同一个 mosdns ，便于统一监控和管理；
 2.	代理节点/插件（甚至旁路网关系统）失效 不影响 直连域名/设备的 DNS 查询；
@@ -71,8 +72,8 @@ echo “192.168.10.6” >> /etc/mosdns/proxy_clients.txt
 
 ### 相同逻辑的 xray 客户端配置示例
 几个关键参数：<br/>
-dnsObject 中的 `"expectIPs": ["geoip:cn"]` 、 `"disableFallbackIfMatch": true` 以及 每个server 的 `"skipFallback": true/false` <br/>
-routingObject 中的 `"domainStrategy": "IPIfNonMatch"`
+- dnsObject 中的 `"expectIPs": ["geoip:cn"]` 、 `"disableFallbackIfMatch": true` 以及 每个server 的 `"skipFallback": true/false` <br/>
+- routingObject 中的 `"domainStrategy": "IPIfNonMatch"`
 ```
 {
   "dns": {
@@ -243,22 +244,18 @@ mosdns 可以设置多个缓存池，本项目将局域网本地(DHCP server)/�
 <br/>
 
 ### mosdns 上游服务器的选择
-建议使用支持 ECS 的公共 DNS 服务器，获取离自己最近的 IP，从而有更好的连接速度。
-<br/>
-建议通过 DOH (DNS over HTTPS) 进行查询，确保 ECS 中的 IP 信息不被中间人看到。
-<br/>
-国内既支持 DOH 又支持 ECS 的公共 DNS 服务器有：阿里、腾讯、360 。
-<br/>
-国外支持 DOH 的公共 DNS 服务器有很多，但是支持 ECS 的也不多，大名鼎鼎的 Cloudflare 就不支持 ECS 。
-<br/>
-目前已知 谷歌、AdGuard 都支持 ECS；Quad9 的 9.9.9.9 不支持，但是 9.9.9.11 支持。其他的请自行搜索。
-建议大家选择公共 DNS 服务器时 打开其官网看一下相关介绍。
+- 建议使用支持 ECS 的公共 DNS 服务器，获取离自己最近的 IP，从而有更好的连接速度
+- 建议通过 DOH (DNS over HTTPS) 进行查询，确保 ECS 中的 IP 信息不被中间人看到
+- 国内既支持 DOH 又支持 ECS 的公共 DNS 服务器有：阿里、腾讯、360
+- 国外支持 DOH 的公共 DNS 服务器有很多，但是支持 ECS 的也不多，大名鼎鼎的 Cloudflare 就不支持 ECS
+- 目前已知 谷歌、AdGuard 都支持 ECS；Quad9 的 9.9.9.9 不支持，但是 9.9.9.11 支持
+- 其他公共 DNS 服务器请自行搜索；建议大家选择公共 DNS 服务器时，打开其官网看一下相关介绍
 
 <br/>
 
 ## 参考项目
-· [mosdns](https://github.com/IrineSistiana/mosdns)<br/>
-· [Xray-core](https://github.com/XTLS/Xray-core)<br/>
-· [domain-list-community](https://github.com/v2fly/domain-list-community)<br/>
-· [v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)<br/>
-· [AdGuardHome](https://github.com/AdguardTeam/AdGuardHome)
+- [mosdns](https://github.com/IrineSistiana/mosdns)
+- [Xray-core](https://github.com/XTLS/Xray-core)
+- [domain-list-community](https://github.com/v2fly/domain-list-community)
+- [v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)
+- [AdGuardHome](https://github.com/AdguardTeam/AdGuardHome)
