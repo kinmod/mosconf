@@ -28,6 +28,9 @@
 ## 使用方法：
 1.	安装 mosdns v5.3+，不同系统安装方式不同：OpenWrt 系统安装 luci-app-mosdns 插件；iKuai 系统通过 docker 安装；Debian 等 Linux 系统需从 GitHub 下载程序文件并安装至系统服务，然后设置开机自启；
 2.	下载并运行初始化脚本 mosdns_initial.sh，默认配置目录是 /etc/mosdns（如需更改，请修改脚本的第 24 行），默认解压的数据标签有 geoip:private, geoip:cn, geosite:private, geosite:google, geosite:cn, geosite:geolocation!cn（如需更改，请修改脚本的第 80~86 行）；
+```
+sudo bash -c 'curl -LO https://raw.githubusercontent.com/Benjamin1919/mosdns-homeconf/main/mosdns_initial.sh && chmod +x mosdns_initial.sh && ./mosdns_initial.sh'
+```
 3.	将 DHCP server 的局域网 IP 填入 01_dns_server.yaml 第 10 行的相应位置；
 4.	如果已通过 passwall2/openclash 等插件实现了局域网透明代理，那么请保留 01_dns_server.yaml 第 48、53、58、63 行的注释符号或整行删除；否则需要去掉注释符号，给每个国外的上游 DNS 服务器指定 socks 代理，避免因网络不通导致查询中断；
 5.	如果修改了初始化脚本 mosdns_initial.sh 中的默认配置目录，那么需要修改 02_data_set.yaml、03_cache_plugin.yaml 和 config_main.yaml 中的相应路径；
