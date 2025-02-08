@@ -38,7 +38,10 @@ declare -a dirs=(
 
 for dir in "${dirs[@]}"; do
     if [ ! -d "$dir" ]; then
-        mkdir -p "$dir" || { echo "错误: 无法创建目录 $dir"; exit 1; }
+        mkdir -p "$dir" || { 
+            echo "错误: 无法创建目录 $dir"
+            exit 1
+        }
         echo "已创建目录: $dir"
     else
         echo "目录已存在: $dir"
