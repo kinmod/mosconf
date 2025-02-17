@@ -8,7 +8,7 @@ plugins:
     args:
       - matches:
           - qtype 33
-          - qname _dns-push-tls._tcp.service.arpa _dns-push-tls._tcp
+          - qname domain:_dns-push-tls._tcp.service.arpa domain:_dns-push-tls._tcp
         exec: reject 4
 
   # 处理 Matter协议 服务发现 (如果家中有Matter家居中枢，需删除此段以保证Matter服务正常运行)
@@ -17,7 +17,7 @@ plugins:
     args:
       - matches:
           - qtype 6 12
-          - qname _matter._tcp.default.service.arpa
+          - qname domain:_matter._tcp.default.service.arpa
         exec: reject 4
   
   # 处理局域网服务发现的SOA查询
