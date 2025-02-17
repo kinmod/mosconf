@@ -24,7 +24,7 @@ plugins:
     type: domain_set
     args:
       exps:
-        - "0.0.192.in-addr.arpa"
+        - "domain:0.0.192.in-addr.arpa"
       files:
         - "/etc/mosdns/domain_set/geosite_private.txt"
   
