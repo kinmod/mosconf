@@ -34,8 +34,8 @@ sudo bash -c 'curl -LO https://raw.githubusercontent.com/Benjamin1919/mosdns-hom
 3.	将 DHCP server 的局域网 IP 填入 01_dns_server.yaml 第 10 行的相应位置；
 4.	如果已通过 passwall2/openclash 等插件实现了局域网透明代理，那么请保留 01_dns_server.yaml 第 48、53、58、63 行的注释符号或整行删除；否则需要去掉注释符号，给每个国外的上游 DNS 服务器指定 socks 代理，避免因网络不通导致查询中断；
 5.	如果修改了初始化脚本 mosdns_initial.sh 中的默认配置目录，那么需要修改 02_data_set.yaml、03_cache_plugin.yaml 和 config_main.yaml 中的相应路径；
-6.	将运行 mosdns 的设备 IP 填入 config_main.yaml 第 8 行的相应位置，将 DDNS 域名填入第 69 行的相应位置；
-7.	直连查询时发送 ECS，需要在 config_main.yaml 第 91、153 行填入 家庭宽带公网 IP 并取消注释；代理查询时发送 ECS，需要在第 102、166 行填入 代理节点落地 IP 并取消注释；
+6.	将运行 mosdns 的设备 IP 填入 config_main.yaml 第 9 行的相应位置，将 DDNS 域名填入第 72 行的相应位置；
+7.	直连查询时发送 ECS，需要在 config_main.yaml 第 94、156 行填入 家庭宽带公网 IP 并取消注释；代理查询时发送 ECS，需要在第 105、169 行填入 代理节点落地 IP 并取消注释；
 8.	将需要进行 DNS 分流的客户端 (通常是被代理的客户端) IP加入列表，例如：
 ```
 echo “192.168.10.6” >> /etc/mosdns/proxy_clients.txt
@@ -240,7 +240,7 @@ mosdns 可以设置多个缓存池，本项目将局域网本地(DHCP server)/�
 1.	直连的客户端即便查询国外网站的 DNS，也只会被存储在国内服务器的缓存池中，不会污染国外服务器的缓存池，从而保证走代理的客户端始终能获得正确的 DNS 解析；
 2.	代理节点变更后，可以只清除国外服务器的缓存池，不影响直连的域名或客户端；以上文“最佳实践”中的场景为例，清除国外服务器的缓存可以使用命令行：
 `curl http://192.168.10.3:9091/plugins/Cache_Proxy/flush` 或用浏览器直接访问 `http://192.168.10.3:9091/plugins/Cache_Proxy/flush` (该操作只会清除内存中的缓存，不会删除存盘 dump 文件；只要不重启 mosdns 或不重启设备，mosdns 不会主动加载存盘 dump 文件；如果距离上次 dump 有 1024 次更新，则内存缓存会存盘并覆盖旧的记录)；
-3.	如果经常变更代理节点，只需删除 config_main.yaml 第 99、100、163、164 行，即禁用国外服务器的查询缓存。
+3.	如果经常变更代理节点，只需删除 config_main.yaml 第 102、103、166、167 行，即禁用国外服务器的查询缓存。
 
 注意：AdGuardhome 有缓存功能，但是无法进行缓存分离。如果 AdGuardHome 和 mosdns 搭配使用，建议禁用 AdGuardHome 的乐观缓存，只启用 mosdns 的缓存，避免缓存池污染。
 
