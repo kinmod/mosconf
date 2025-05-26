@@ -6,7 +6,7 @@ log:
 
 ## API 入口设置
 api:
-  http: "[本机局域网IP]:9091"
+  http: "127.0.0.1:9091"
 
 
 ## 预加载的插件 (请务必确保下列插件的路径和文件名正确)
@@ -61,6 +61,7 @@ plugins:
     type: sequence
     args:
       - exec: cache 1024
+      - exec: jump Exit_if_Resp
       - exec: forward 223.5.5.5 119.29.29.29
       - exec: jump Exit_if_Resp
   
@@ -80,7 +81,9 @@ plugins:
     type: sequence
     args:
       - exec: $PTR_Cache_Local
+      - exec: jump Exit_if_Resp
       - exec: $Cache_Local
+      - exec: jump Exit_if_Resp
       - exec: $Local_Server
       - exec: jump TTL_Exit_if_Resp
 
@@ -89,7 +92,9 @@ plugins:
     type: sequence
     args:
       - exec: $PTR_Cache_Direct
+      - exec: jump Exit_if_Resp
       - exec: $Cache_Direct
+      - exec: jump Exit_if_Resp
       #- exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
       #- exec: ecs [本机公网IP]  # 发送ECS IP从而获得最优的查询结果
       - exec: $Domestic_Server
@@ -100,7 +105,9 @@ plugins:
     type: sequence
     args:
       - exec: $PTR_Cache_Proxy
+      - exec: jump Exit_if_Resp
       - exec: $Cache_Proxy
+      - exec: jump Exit_if_Resp
       #- exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
       #- exec: ecs [节点落地IP]  # 发送ECS IP从而获得最优的查询结果
       - exec: $Overseas_Server
@@ -152,6 +159,9 @@ plugins:
     args:
       - exec: $PTR_Cache_Direct
       - exec: $Cache_Direct
+      - matches:
+          - resp_ip $IP_CN
+        exec: accept
       #- exec: prefer_ipv4
       #- exec: ecs [本机公网IP]
       - exec: $Domestic_Server
@@ -165,6 +175,9 @@ plugins:
     args:
       - exec: $PTR_Cache_Proxy
       - exec: $Cache_Proxy
+      - matches:
+          - has_resp
+        exec: return
       #- exec: prefer_ipv4
       #- exec: ecs [节点落地IP]
       - exec: $Overseas_Server
@@ -196,6 +209,7 @@ plugins:
         - "/etc/mosdns/proxy_clients.txt"
 
   # 只有IP在 proxy_clients.txt 中的客户端才能进行DNS分流；否则只能使用国内DNS
+  # (注意：该功能实现的前提是mosdns监听53端口 或 所有目标端口为53的流量都重定向至mosdns; 如果mosdns是AdGuardHome或dnsmasq的上游, 那么mosdns识别到的客户端IP只有127.0.0.1, 此时客户端分流功能无法实现)
   - tag: Client_Split
     type: sequence
     args:
@@ -207,6 +221,7 @@ plugins:
 
   ##----------------## 【主程序】 ##----------------##
 
+  # 当mosdns是主DNS时(即 mosdns监听53端口 或 所有目标端口为53的流量都重定向至mosdns) 主程序入口:
   - tag: MAIN
     type: sequence
     args:
@@ -221,11 +236,45 @@ plugins:
       # 对列表中的客户端进行DNS分流
       - exec: jump Client_Split
 
+  # 当mosdns是AdGuardHome的上游时, 按域名分流的DNS查询 主程序入口:
+  - tag: MAIN_SPLIT
+    type: sequence
+    args:
+      - exec: jump Block_Bad_Query
+      #- exec: jump Local_Service
+      - exec: jump Lookup_DDNS
+      - exec: jump Lookup_Local
+      - exec: jump DNS_Split
+
+  # 当mosdns是AdGuardHome的上游时, 所有DNS查询都需要直连 主程序入口:
+  - tag: MAIN_DIRECT
+    type: sequence
+    args:
+      - exec: jump Block_Bad_Query
+      #- exec: jump Local_Service
+      - exec: jump Lookup_DDNS
+      - exec: jump Lookup_Local
+      - exec: jump Lookup_Direct_seq
+
 
   ##----------------## 监听端口设置 ##----------------##
 
-  - tag: UDP_SERVER
+  # 当mosdns是主DNS时(即 mosdns监听53端口 或 所有目标端口为53的流量都重定向至mosdns), mosdns可根据客户端IP(需在路由器中设置静态IP或划分VLAN)进行分流
+  - tag: Client_Split_Server
     type: udp_server
     args:
       entry: MAIN
-      listen: 127.0.0.1:10053
+      listen: 0.0.0.0:53
+
+  # 当mosdns是AdGuardHome的上游时, 在AdGuardHome管理页面“设置-客户端设置-新建客户端”中添加客户端的IP或CIDR, 并在“上游服务器”中填入127.0.0.1:10053或127.0.0.1:20053, 同样可以实现根据客户端IP进行分流
+  - tag: Domain_Split_Server
+    type: udp_server
+    args:
+      entry: MAIN_SPLIT
+      listen: 0.0.0.0:10053
+
+  - tag: All_Direct_Server
+    type: udp_server
+    args:
+      entry: MAIN_DIRECT
+      listen: 0.0.0.0:20053
