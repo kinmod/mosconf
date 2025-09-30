@@ -21,7 +21,7 @@ if ! command -v wget &> /dev/null; then
 fi
 
 # mosdns配置目录
-conf_dir="/etc/mosdns"
+conf_dir="/user/appdata/mosdns"
 geodata_dir="$conf_dir/geodata"
 ip_set_dir="$conf_dir/ip_set"
 domain_set_dir="$conf_dir/domain_set"
