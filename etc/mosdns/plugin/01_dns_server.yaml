@@ -7,7 +7,7 @@ plugins:
     args:
       concurrent: 1
       upstreams:
-        - addr: "udp://[DHCP server IP]:53"
+        - addr: "udp://10.10.8.251:53"
 
   # 国内DNS服务器
   - tag: Domestic_Server
