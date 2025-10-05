@@ -1,5 +1,5 @@
 # **mosdns-homeconf**
-从 Benjamin1919/mosdns-homeconf 复制过来，适应UNRAID平台，自用。
+从 Benjamin1919/mosdns-homeconf 复制过来，适应自用平台，自用。
 <br/>
 适用于家庭网络 DNS 管理的 mosdns 配置，使不同网关的客户端共用一个 DNS，实现客户端按需分流、直连和代理的缓存分离、防止DNS污染、快速查询PTR等功能
 原初始命令路径不合适，变更为UNRAID下 的MOSDNS根目录 /user/appdata/mosdns
