@@ -264,7 +264,7 @@ plugins:
     type: udp_server
     args:
       entry: MAIN
-      listen: 0.0.0.0:53
+      listen: 0.0.0.0:5353
 
   # 当mosdns是AdGuardHome的上游时, 在AdGuardHome管理页面“设置-客户端设置-新建客户端”中添加客户端的IP或CIDR, 并在“上游服务器”中填入127.0.0.1:10053或127.0.0.1:20053, 同样可以实现根据客户端IP进行分流
   - tag: Domain_Split_Server
