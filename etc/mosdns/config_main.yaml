@@ -108,7 +108,7 @@ plugins:
       - exec: jump Exit_if_Resp
       - exec: $Cache_Proxy
       - exec: jump Exit_if_Resp
-      #- exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
+      - exec: prefer_ipv4  # 只返回A记录(IPv4)查询结果
       #- exec: ecs [节点落地IP]  # 发送ECS IP从而获得最优的查询结果
       - exec: $Overseas_Server
       - exec: jump TTL_Exit_if_Resp
@@ -178,7 +178,7 @@ plugins:
       - matches:
           - has_resp
         exec: return
-      #- exec: prefer_ipv4
+      - exec: prefer_ipv4
       #- exec: ecs [节点落地IP]
       - exec: $Overseas_Server
 
